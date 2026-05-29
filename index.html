@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Grader - Panel de Control del Profesor</title>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for premium look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        /* Custom Glowing effects */
+        .glow-effect {
+            box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.15);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.15);
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-200 antialiased overflow-x-hidden">
+
+    <!-- Notification Toast (SaaS notification system) -->
+    <div id="toast" class="fixed top-6 right-6 z-50 flex items-center gap-3 bg-slate-900/90 border border-slate-800 text-white px-5 py-4 rounded-xl shadow-2xl backdrop-blur-xl translate-y-[-150%] opacity-0 transition-all duration-500 ease-out">
+        <div class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400" id="toast-icon-container">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-sm font-semibold" id="toast-title">Éxito</p>
+            <p class="text-xs text-slate-400 mt-0.5" id="toast-message">Operación realizada con éxito.</p>
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="min-h-screen flex flex-col bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),rgba(255,255,255,0))]">
+        
+        <!-- Header -->
+        <header class="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <!-- Logo / Brand -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+                            <i data-lucide="terminal" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="font-display font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+                                AI Grader <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/25">SaaS PRO</span>
+                            </span>
+                            <span class="text-xs text-slate-500 block">Corrección inteligente automática</span>
+                        </div>
+                    </div>
+
+                    <!-- App Status / Actions -->
+                    <div class="flex items-center gap-6">
+                        <!-- CI/CD Status indicator -->
+                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-slate-400">CI/CD Bot: <strong class="text-emerald-400">Activo</strong></span>
+                        </div>
+
+                        <!-- User Profile Info -->
+                        <div class="flex items-center gap-3 border-l border-slate-900 pl-6">
+                            <div class="text-right hidden md:block">
+                                <p class="text-xs font-semibold text-white">Prof. Eric López</p>
+                                <p class="text-[10px] text-slate-400">Administrador principal</p>
+                            </div>
+                            <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-indigo-500 to-emerald-500 p-0.5">
+                                <div class="h-full w-full rounded-full bg-slate-950 flex items-center justify-center text-xs font-bold text-white">EL</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Dashboard Top Section (Context & Metrics) -->
+            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-display font-extrabold text-white tracking-tight">Panel de Control Docente</h1>
+                    <p class="text-slate-400 text-sm mt-1">Crea rúbricas inteligentes estandarizadas en JSON y supervisa el rendimiento de tus estudiantes en tiempo real.</p>
+                </div>
+                
+                <!-- Tab Selector Buttons (Premium design) -->
+                <div class="bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 flex gap-1 self-start md:self-auto">
+                    <button onclick="switchTab('rubricas')" id="tab-btn-rubricas" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-indigo-600 text-white shadow-lg shadow-indigo-600/10">
+                        <i data-lucide="scroll-text" class="w-4 h-4"></i>
+                        Editor de Rúbricas
+                    </button>
+                    <button onclick="switchTab('alumnos')" id="tab-btn-alumnos" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-white">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        Supervisión de Alumnos
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Widgets -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- KPI 1 -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl glow-effect">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-medium">Total de Entregas</span>
+                        <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl"><i data-lucide="file-code-2" class="w-4 h-4"></i></div>
+                    </div>
+                    <p class="text-2xl font-display font-extrabold text-white mt-3" id="kpi-total">4</p>
+                    <span class="text-[10px] text-indigo-400 mt-1 block font-medium">✓ Sincronizado con GitHub</span>
+                </div>
+                <!-- KPI 2 -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-medium">Promedio General</span>
+                        <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl"><i data-lucide="award" class="w-4 h-4"></i></div>
+                    </div>
+                    <p class="text-2xl font-display font-extrabold text-white mt-3" id="kpi-average">8.3 / 10</p>
+                    <span class="text-[10px] text-emerald-400 mt-1 block font-medium">↑ 4% sobre semestre anterior</span>
+                </div>
+                <!-- KPI 3 -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-medium">Correcciones por IA</span>
+                        <div class="p-2 bg-violet-500/10 text-violet-400 rounded-xl"><i data-lucide="cpu" class="w-4 h-4"></i></div>
+                    </div>
+                    <p class="text-2xl font-display font-extrabold text-white mt-3" id="kpi-corrected">3</p>
+                    <span class="text-[10px] text-slate-500 mt-1 block font-medium">Gemini 2.5 Flash Activo</span>
+                </div>
+                <!-- KPI 4 -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-medium">Pendientes de Corrección</span>
+                        <div class="p-2 bg-amber-500/10 text-amber-400 rounded-xl"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                    </div>
+                    <p class="text-2xl font-display font-extrabold text-white mt-3" id="kpi-pending">1</p>
+                    <span class="text-[10px] text-amber-400 mt-1 block font-medium">A la espera de Push en entregas/</span>
+                </div>
+            </div>
+
+            <!-- SECTION: GESTOR DE RÚBRICAS (EDITOR DE CRITERIOS) -->
+            <section id="section-rubricas" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Left: Form and Dynamic Criterias -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <!-- Add Criterion Card -->
+                        <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl glow-effect">
+                            <div class="flex items-center gap-3 mb-5">
+                                <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg"><i data-lucide="plus-circle" class="w-5 h-5"></i></div>
+                                <div>
+                                    <h3 class="text-lg font-display font-bold text-white">Añadir Criterio de Evaluación</h3>
+                                    <p class="text-xs text-slate-400">Define los parámetros técnicos que el modelo de IA auditará.</p>
+                                </div>
+                            </div>
+
+                            <form id="criterion-form" onsubmit="addCriterion(event)" class="space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                                    <div class="sm:col-span-8">
+                                        <label for="crit-id" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ID o Nombre del Criterio</label>
+                                        <input type="text" id="crit-id" placeholder="Ej: POO_y_Encapsulamiento" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200">
+                                    </div>
+                                    <div class="sm:col-span-4">
+                                        <label for="crit-points" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Puntos Máximos</label>
+                                        <input type="number" id="crit-points" placeholder="Ej: 3" min="1" max="10" step="0.5" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="crit-desc" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Descripción Detallada del Criterio</label>
+                                    <textarea id="crit-desc" rows="3" placeholder="Define las expectativas exactas. Ej: Se evaluará que existan clases bien definidas con atributos privados y métodos públicos..." required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200"></textarea>
+                                </div>
+                                
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/15 hover:shadow-indigo-600/25 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                    Insertar Criterio a la Rúbrica
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Configuración Extra Form -->
+                        <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-6 rounded-2xl">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="settings" class="w-5 h-5"></i></div>
+                                <div>
+                                    <h3 class="text-lg font-display font-bold text-white">Instrucciones y Restricciones del Sistema</h3>
+                                    <p class="text-xs text-slate-400 font-medium text-emerald-400">Instrucciones globales de control para la IA.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="instrucciones-extra" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Instrucciones Adicionales</label>
+                                <textarea id="instrucciones-extra" oninput="updateExtraInstructions()" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all duration-200">El código debe estar estrictamente en Java. No debe contener comentarios. Si el código compila, ejecuta el menú sin cuelgues y cumple los puntos anteriores, la calificación automática será de 10 sobre 10.</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Criterias List Block -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Criterios Activos de la Rúbrica</h4>
+                            <div id="criterias-container" class="space-y-3">
+                                <!-- Dynamic criteria will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: JSON Live Code Editor & Generator -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl overflow-hidden flex flex-col h-[530px] glow-effect sticky top-24">
+                            <!-- Code Header -->
+                            <div class="bg-slate-950/80 px-5 py-4 border-b border-slate-900 flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="flex gap-1.5">
+                                        <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+                                    </div>
+                                    <span class="text-xs font-mono text-slate-400 font-semibold flex items-center gap-1.5 ml-2">
+                                        <i data-lucide="file-json" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                        rubrica.json <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-800">Vista previa en tiempo real</span>
+                                    </span>
+                                </div>
+                                <!-- Copy Button -->
+                                <button onclick="copyJsonToClipboard()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-900 border border-slate-800 hover:border-slate-700 px-2.5 py-1.5 rounded-lg transition-all">
+                                    <i data-lucide="copy" class="w-3 h-3"></i>
+                                    Copiar
+                                </button>
+                            </div>
+                            <!-- Code block containing pre-formatted JSON -->
+                            <div class="flex-1 bg-slate-950/40 p-5 overflow-auto font-mono text-xs text-indigo-300 relative">
+                                <pre id="json-preview" class="whitespace-pre-wrap leading-relaxed select-all">Generando previsualización...</pre>
+                            </div>
+                            
+                            <!-- Generate and Download action -->
+                            <div class="p-4 bg-slate-950/80 border-t border-slate-900">
+                                <button onclick="downloadRubricaJson()" class="w-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold text-sm py-4 px-6 rounded-xl shadow-xl shadow-indigo-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                    Descargar rubrica.json
+                                </button>
+                                <p class="text-[10px] text-center text-slate-500 mt-2.5">
+                                    Coloca este archivo en la raíz del proyecto para que la IA aplique las reglas en el próximo GitHub Actions run.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: PANEL DE ALUMNOS Y CORRECCIONES (VISOR) -->
+            <section id="section-alumnos" class="hidden space-y-6">
+                <!-- Search & Filters controls -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="relative w-full md:w-80">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="student-search" oninput="filterStudents()" placeholder="Buscar por alumno o lenguaje..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all duration-200">
+                    </div>
+                    
+                    <div class="flex items-center gap-2 self-end md:self-auto">
+                        <span class="text-xs text-slate-500 font-semibold mr-1">Filtrar:</span>
+                        <button onclick="setFilter('todos')" id="filter-todos" class="px-3.5 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-800 bg-indigo-500/10 text-indigo-400 border-indigo-500/25">Todos</button>
+                        <button onclick="setFilter('corregido')" id="filter-corregido" class="px-3.5 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-800 text-slate-400 hover:text-white">Corregidos</button>
+                        <button onclick="setFilter('pendiente')" id="filter-pendiente" class="px-3.5 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-800 text-slate-400 hover:text-white">Pendientes</button>
+                    </div>
+                </div>
+
+                <!-- Students Table container -->
+                <div class="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl overflow-hidden glow-effect">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-950/80 border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th class="py-4 px-6">Estudiante</th>
+                                    <th class="py-4 px-4">Lenguaje</th>
+                                    <th class="py-4 px-4">Última Modificación</th>
+                                    <th class="py-4 px-4">Estado Corrección</th>
+                                    <th class="py-4 px-4 text-center">Nota Final</th>
+                                    <th class="py-4 px-6 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body" class="divide-y divide-slate-800/60 text-slate-300 text-sm">
+                                <!-- Student rows will dynamically render here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto border-t border-slate-900 py-6 bg-slate-950">
+            <div class="max-w-7xl mx-auto px-4 text-center sm:flex sm:items-center sm:justify-between text-xs text-slate-500">
+                <p>© 2026 AI Grader System. Licencia Académica Premium.</p>
+                <div class="flex justify-center gap-4 mt-2 sm:mt-0">
+                    <a href="#" class="hover:text-slate-300 transition-all">Documentación API</a>
+                    <span>•</span>
+                    <a href="#" class="hover:text-slate-300 transition-all">Soporte Tecnológico</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- STUDENT REPORT MODAL (PREMIUM OVERLAY VISOR) -->
+    <div id="report-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="closeModal()" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Modal Content Card -->
+            <div class="inline-block align-bottom bg-slate-900 border border-slate-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full glow-emerald">
+                <!-- Modal Header -->
+                <div class="bg-slate-950/80 px-6 py-5 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="text-lg font-display font-bold text-white" id="modal-student-name">Eric López</h3>
+                            <p class="text-xs text-slate-400">Reporte de Auditoría Generado por Gemini 2.5 Flash</p>
+                        </div>
+                    </div>
+                    <!-- Close btn -->
+                    <button onclick="closeModal()" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 md:p-8 space-y-6 max-h-[65vh] overflow-y-auto">
+                    <!-- Note Summary Ribbon -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-r from-slate-950 to-slate-950/40 border border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Evaluación Final</span>
+                            <span class="text-xs font-semibold text-emerald-400 mt-0.5 block flex items-center gap-1.5">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Auditoría Completada Exitosamente
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-display font-extrabold text-white" id="modal-student-grade">8.5 / 10</span>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown criteria detailed block -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            Puntuaciones Desglosadas
+                        </h4>
+                        
+                        <div id="modal-criteria-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback sections -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <!-- Positive points -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                                Aspectos Positivos
+                            </h4>
+                            <ul id="modal-positives" class="space-y-2 text-xs text-slate-300 leading-relaxed bg-slate-950/30 border border-slate-850 p-4 rounded-xl">
+                                <!-- Dynamic -->
+                            </ul>
+                        </div>
+                        <!-- Improvements points -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                Oportunidades de Mejora
+                            </h4>
+                            <ul id="modal-improvements" class="space-y-2 text-xs text-slate-300 leading-relaxed bg-slate-950/30 border border-slate-850 p-4 rounded-xl">
+                                <!-- Dynamic -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-slate-950/80 border-t border-slate-800 text-right">
+                    <button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 px-6 rounded-xl transition-all">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE JAVASCRIPT LOGIC -->
+    <script>
+        // Initial state for dynamic Rubric Editor
+        let rubricaCriterios = [
+            {
+                id: "POO_y_Encapsulamiento",
+                puntos: 3,
+                descripcion: "Se evaluará que existan clases bien definidas (ej. BankAccount), con atributos privados y métodos públicos para acceder o modificar la información (getters y métodos de lógica de negocio)."
+            },
+            {
+                id: "Manejo_de_Excepciones_y_Errores",
+                puntos: 3,
+                descripcion: "Es obligatorio el uso de bloques try-catch para evitar que el programa se cierre por inputs inválidos del usuario (ej. NumberFormatException) y la creación de al menos una excepción personalizada (ej. heredar de Exception para fondos insuficientes)."
+            },
+            {
+                id: "Uso_de_Colecciones",
+                puntos: 2,
+                descripcion: "El sistema debe ser capaz de gestionar múltiples cuentas utilizando colecciones de Java, concretamente un ArrayList, permitiendo iterar sobre ellas para buscar o listar."
+            },
+            {
+                id: "Funcionalidad_del_Menu_Interactivo",
+                puntos: 2,
+                descripcion: "El programa debe contener un bucle (do-while) con una estructura condicional (switch) que permita al usuario: crear cuentas, depositar, retirar, listar y salir de forma fluida."
+            }
+        ];
+
+        let instruccionesExtra = "El código debe estar estrictamente en Java. No debe contener comentarios. Si el código compila, ejecuta el menú sin cuelgues y cumple los puntos anteriores, la calificación automática será de 10 sobre 10.";
+
+        // Mock data for student submissions supervisor
+        let alumnos = [
+            {
+                nombre: "Eric López",
+                avatar: "EL",
+                lenguaje: "Python",
+                fecha: "Hoy, 10:48 AM",
+                estado: "corregido",
+                nota: 8.5,
+                reporte: {
+                    desglose: [
+                        { criterio: "POO y Encapsulamiento", nota: "2.5 / 3.0", desc: "Clases bien armadas, pero expone directamente el atributo _saldo sin property getters." },
+                        { criterio: "Manejo de Excepciones", nota: "3.0 / 3.0", desc: "Impecable uso de excepciones de Python y lanzamiento de errores personalizados robustos." },
+                        { criterio: "Uso de Colecciones", nota: "1.5 / 2.0", desc: "Uso de listas estándar. Hubiese sido mejor estructurar con un diccionario para optimizar búsquedas." },
+                        { criterio: "Menú Interactivo", nota: "1.5 / 2.0", desc: "Funcionalidad correcta pero carece de un manejo limpio al pulsar una opción inválida." }
+                    ],
+                    positivos: [
+                        "Excelente modularización y estructura limpia de código.",
+                        "Documentación minuciosa en docstrings para las clases complejas.",
+                        "Control impecable de flujos numéricos en los inputs."
+                    ],
+                    mejoras: [
+                        "Implementar encapsulamiento riguroso de variables de estado con getters/setters.",
+                        "Refactorizar la validación de tipo de dato del menú para evitar excepciones innecesarias.",
+                        "Optimizar la lógica de colecciones usando diccionarios para búsquedas en tiempo O(1)."
+                    ]
+                }
+            },
+            {
+                nombre: "Gerard Gómez",
+                avatar: "GG",
+                lenguaje: "Java",
+                fecha: "Hoy, 10:46 AM",
+                estado: "corregido",
+                nota: 9.5,
+                reporte: {
+                    desglose: [
+                        { criterio: "POO y Encapsulamiento", nota: "3.0 / 3.0", desc: "Clase BankAccount hermosamente encapsulada con getters/setters de negocio dedicados." },
+                        { criterio: "Manejo de Excepciones", nota: "2.5 / 3.0", desc: "Usa try-catch de manera correcta, pero atrapa Exception genérico en lugar de capturar NumberFormatException." },
+                        { criterio: "Uso de Colecciones", nota: "2.0 / 2.0", desc: "Uso ejemplar de ArrayList tipado correctamente." },
+                        { criterio: "Menú Interactivo", nota: "2.0 / 2.0", desc: "Menú en consola súper interactivo con bucle do-while sólido." }
+                    ],
+                    positivos: [
+                        "Perfecta aplicación de la orientación a objetos y principios SOLID básicos.",
+                        "Excepciones personalizadas bien integradas y heredadas correctamente de la clase Exception.",
+                        "Código limpio y formateado con estándares profesionales."
+                    ],
+                    mejoras: [
+                        "Especializar la captura de excepciones evitando atrapar tipos de excepción genéricos.",
+                        "Añadir constantes para las opciones del menú de consola para mejorar la legibilidad del switch."
+                    ]
+                }
+            },
+            {
+                nombre: "Sofía Castro",
+                avatar: "SC",
+                lenguaje: "Java",
+                fecha: "Hace 2 días",
+                estado: "corregido",
+                nota: 7.0,
+                reporte: {
+                    desglose: [
+                        { criterio: "POO y Encapsulamiento", nota: "1.5 / 3.0", desc: "Define clases pero los atributos son públicos, violando la regla principal del encapsulamiento." },
+                        { criterio: "Manejo de Excepciones", nota: "2.0 / 3.0", desc: "Falta una clase de excepción personalizada. Utiliza RuntimeException genérico." },
+                        { criterio: "Uso de Colecciones", nota: "1.5 / 2.0", desc: "Usa arrays nativos estáticos en lugar de un ArrayList dinámico solicitado." },
+                        { criterio: "Menú Interactivo", nota: "2.0 / 2.0", desc: "El menú funciona perfectamente." }
+                    ],
+                    positivos: [
+                        "Menú muy amigable e intuitivo para el usuario.",
+                        "Validaciones robustas en entrada de depósitos y retiros."
+                    ],
+                    mejoras: [
+                        "Cambiar la visibilidad de los atributos de BankAccount de public a private.",
+                        "Reemplazar los arrays fijos por colecciones de Java del tipo ArrayList dinámico.",
+                        "Diseñar la jerarquía correcta para excepciones personalizadas."
+                    ]
+                }
+            },
+            {
+                nombre: "Marta Sánchez",
+                avatar: "MS",
+                lenguaje: "Dart",
+                fecha: "Ayer, 06:15 PM",
+                estado: "pendiente",
+                nota: null,
+                reporte: null
+            }
+        ];
+
+        let activeFilter = 'todos';
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderCriterias();
+            renderStudentsTable();
+            updateKpis();
+        });
+
+        // TOAST NOTIFICATION UTILITY
+        function showToast(title, message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const tTitle = document.getElementById('toast-title');
+            const tMessage = document.getElementById('toast-message');
+
+            tTitle.textContent = title;
+            tMessage.textContent = message;
+
+            if (isSuccess) {
+                iconContainer.className = "p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400";
+                iconContainer.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i>';
+            } else {
+                iconContainer.className = "p-1.5 rounded-lg bg-red-500/20 text-red-400";
+                iconContainer.innerHTML = '<i data-lucide="x-circle" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3500);
+        }
+
+        // TAB SWITCHING LÓGICA
+        function switchTab(tabId) {
+            const rubricasSection = document.getElementById('section-rubricas');
+            const alumnosSection = document.getElementById('section-alumnos');
+            const btnRubricas = document.getElementById('tab-btn-rubricas');
+            const btnAlumnos = document.getElementById('tab-btn-alumnos');
+
+            if (tabId === 'rubricas') {
+                rubricasSection.classList.remove('hidden');
+                alumnosSection.classList.add('hidden');
+                btnRubricas.className = "flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-indigo-600 text-white shadow-lg shadow-indigo-600/10";
+                btnAlumnos.className = "flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-white";
+            } else {
+                rubricasSection.classList.add('hidden');
+                alumnosSection.classList.remove('hidden');
+                btnAlumnos.className = "flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-indigo-600 text-white shadow-lg shadow-indigo-600/10";
+                btnRubricas.className = "flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-white";
+            }
+        }
+
+        // RENDER CRITERIAS FORM LIST
+        function renderCriterias() {
+            const container = document.getElementById('criterias-container');
+            container.innerHTML = '';
+
+            rubricaCriterios.forEach((crit, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl flex items-start justify-between gap-4 hover:border-slate-700 transition-all duration-200";
+                div.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-semibold tracking-wider font-mono">${crit.id}</span>
+                            <span class="text-xs font-bold text-white">(${crit.puntos} Puntos)</span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">${crit.descripcion}</p>
+                    </div>
+                    <button onclick="deleteCriterion(${index})" class="p-1.5 bg-slate-950 border border-slate-800 hover:border-red-500/30 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-all">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+
+            lucide.createIcons();
+            updateJsonPreview();
+        }
+
+        // ADD NEW CRITERION
+        function addCriterion(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('crit-id');
+            const pointsInput = document.getElementById('crit-points');
+            const descInput = document.getElementById('crit-desc');
+
+            const newId = idInput.value.replace(/\s+/g, '_').trim();
+            const points = parseFloat(pointsInput.value);
+            const desc = descInput.value.trim();
+
+            if (rubricaCriterios.some(c => c.id === newId)) {
+                showToast("Criterio Duplicado", "Ya existe un criterio con ese identificador.", false);
+                return;
+            }
+
+            rubricaCriterios.push({
+                id: newId,
+                puntos: points,
+                descripcion: `${points} puntos. ${desc}`
+            });
+
+            idInput.value = '';
+            pointsInput.value = '';
+            descInput.value = '';
+
+            renderCriterias();
+            showToast("Criterio Añadido", "Se agregó el criterio a la rúbrica correctamente.");
+        }
+
+        // DELETE CRITERION
+        function deleteCriterion(index) {
+            rubricaCriterios.splice(index, 1);
+            renderCriterias();
+            showToast("Criterio Eliminado", "Criterio removido de la rúbrica.", false);
+        }
+
+        // UPDATE EXTRA INSTRUCTIONS TEXTAREA
+        function updateExtraInstructions() {
+            instruccionesExtra = document.getElementById('instrucciones-extra').value;
+            updateJsonPreview();
+        }
+
+        // BUILD AND GET JSON OBJECT
+        function buildRubricaObject() {
+            let obj = {};
+            rubricaCriterios.forEach(c => {
+                obj[c.id] = c.descripcion;
+            });
+            if (instruccionesExtra.trim() !== '') {
+                obj["instrucciones_extra"] = instruccionesExtra.trim();
+            }
+            return obj;
+        }
+
+        // PREVIEW JSON LIVE
+        function updateJsonPreview() {
+            const preview = document.getElementById('json-preview');
+            const jsonObject = buildRubricaObject();
+            preview.textContent = JSON.stringify(jsonObject, null, 2);
+        }
+
+        // COPY JSON TO CLIPBOARD
+        function copyJsonToClipboard() {
+            const previewText = document.getElementById('json-preview').textContent;
+            navigator.clipboard.writeText(previewText).then(() => {
+                showToast("Copiado", "Estructura JSON copiada al portapapeles.");
+            }).catch(() => {
+                showToast("Error", "No se pudo copiar el archivo.", false);
+            });
+        }
+
+        // DOWNLOAD RUBRICA.JSON
+        function downloadRubricaJson() {
+            const jsonObject = buildRubricaObject();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonObject, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "rubrica.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showToast("Descarga Iniciada", "rubrica.json se ha generado y descargado con éxito.");
+        }
+
+        // RENDER STUDENTS TABLE
+        function renderStudentsTable() {
+            const tbody = document.getElementById('students-table-body');
+            const searchVal = document.getElementById('student-search').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            const filteredList = alumnos.filter(a => {
+                const matchesSearch = a.nombre.toLowerCase().includes(searchVal) || a.lenguaje.toLowerCase().includes(searchVal);
+                const matchesFilter = activeFilter === 'todos' || a.estado === activeFilter;
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filteredList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-500 text-xs">
+                            Ningún estudiante coincide con la búsqueda o el filtro activo.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filteredList.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/20 transition-all";
+
+                // Status formatting
+                let statusBadge = '';
+                if (a.estado === 'corregido') {
+                    statusBadge = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Corregido por IA
+                        </span>
+                    `;
+                } else {
+                    statusBadge = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-medium">
+                            <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                            Pendiente
+                        </span>
+                    `;
+                }
+
+                // Grade formatting
+                const gradeDisplay = a.nota !== null ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20 font-mono text-xs">${a.nota.toFixed(1)} / 10</span>` : `<span class="text-slate-600 font-mono">-</span>`;
+
+                // Action button
+                const actionBtn = a.estado === 'corregido' ? `
+                    <button onclick="openModal('${a.nombre}')" class="text-xs font-semibold text-indigo-400 hover:text-white bg-indigo-500/10 hover:bg-indigo-600 border border-indigo-500/25 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ml-auto">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                        Ver Informe
+                    </button>
+                ` : `
+                    <button disabled class="text-xs font-semibold text-slate-600 border border-slate-900 px-3 py-1.5 rounded-lg flex items-center gap-1 ml-auto cursor-not-allowed">
+                        <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+                        Sin reporte
+                    </button>
+                `;
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-semibold text-white">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-slate-800 to-slate-700 flex items-center justify-center font-bold text-xs text-white">${a.avatar}</div>
+                            <div>
+                                <p class="text-sm font-semibold">${a.nombre}</p>
+                                <p class="text-[10px] text-slate-500">ID Estudiante: #${Math.floor(Math.random() * 8999) + 1000}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 font-mono text-xs text-slate-400">${a.lenguaje}</td>
+                    <td class="py-4 px-4 text-xs text-slate-500">${a.fecha}</td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                    <td class="py-4 px-4 text-center">${gradeDisplay}</td>
+                    <td class="py-4 px-6">${actionBtn}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        // UPDATE GENERAL STATS KPI CARDS
+        function updateKpis() {
+            const total = alumnos.length;
+            const corrected = alumnos.filter(a => a.estado === 'corregido').length;
+            const pending = alumnos.filter(a => a.estado === 'pendiente').length;
+
+            const correctedWithGrades = alumnos.filter(a => a.nota !== null);
+            const sumOfGrades = correctedWithGrades.reduce((sum, current) => sum + current.nota, 0);
+            const average = correctedWithGrades.length > 0 ? (sumOfGrades / correctedWithGrades.length).toFixed(1) : 0;
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-corrected').textContent = corrected;
+            document.getElementById('kpi-pending').textContent = pending;
+            document.getElementById('kpi-average').textContent = `${average} / 10`;
+        }
+
+        // SET FILTER AND TOGGLE BUTTON STYLING
+        function setFilter(filter) {
+            activeFilter = filter;
+            const allBtn = document.getElementById('filter-todos');
+            const corrBtn = document.getElementById('filter-corregido');
+            const pendBtn = document.getElementById('filter-pendiente');
+
+            // Reset classes
+            const inactiveClass = "px-3.5 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-800 text-slate-400 hover:text-white";
+            const activeClass = "px-3.5 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-800 bg-indigo-500/10 text-indigo-400 border-indigo-500/25";
+
+            allBtn.className = inactiveClass;
+            corrBtn.className = inactiveClass;
+            pendBtn.className = inactiveClass;
+
+            if (filter === 'todos') allBtn.className = activeClass;
+            else if (filter === 'corregido') corrBtn.className = activeClass;
+            else if (filter === 'pendiente') pendBtn.className = activeClass;
+
+            renderStudentsTable();
+        }
+
+        // FILTER SEARCH
+        function filterStudents() {
+            renderStudentsTable();
+        }
+
+        // OPEN REPORT AUDIT MODAL
+        function openModal(studentName) {
+            const student = alumnos.find(a => a.nombre === studentName);
+            if (!student || !student.reporte) return;
+
+            document.getElementById('modal-student-name').textContent = student.nombre;
+            document.getElementById('modal-student-grade').textContent = `${student.nota.toFixed(1)} / 10`;
+
+            // Render breakdown
+            const breakdownContainer = document.getElementById('modal-criteria-breakdown');
+            breakdownContainer.innerHTML = '';
+
+            student.reporte.desglose.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-950/50 border border-slate-850 p-4 rounded-xl space-y-1.5";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-white">${item.criterio}</span>
+                        <span class="font-mono text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">${item.nota}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">${item.desc}</p>
+                `;
+                breakdownContainer.appendChild(card);
+            });
+
+            // Render Positives
+            const posContainer = document.getElementById('modal-positives');
+            posContainer.innerHTML = '';
+            student.reporte.positivos.forEach(pos => {
+                const li = document.createElement('li');
+                li.className = "flex items-start gap-2 text-slate-300";
+                li.innerHTML = `
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                    <span>${pos}</span>
+                `;
+                posContainer.appendChild(li);
+            });
+
+            // Render Improvements
+            const impContainer = document.getElementById('modal-improvements');
+            impContainer.innerHTML = '';
+            student.reporte.mejoras.forEach(imp => {
+                const li = document.createElement('li');
+                li.className = "flex items-start gap-2 text-slate-300";
+                li.innerHTML = `
+                    <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0"></i>
+                    <span>${imp}</span>
+                `;
+                impContainer.appendChild(li);
+            });
+
+            // Refresh icons in modal
+            lucide.createIcons();
+
+            // Display Modal
+            const modal = document.getElementById('report-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // CLOSE MODAL
+        function closeModal() {
+            const modal = document.getElementById('report-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
+</body>
+</html>
