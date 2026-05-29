@@ -1,5 +1,7 @@
 {
-  "limpieza_codigo": "3 puntos",
-  "logica_y_funcionalidad": "7 puntos",
-  "instrucciones_extra": "El código debe estar en Java. Si no compila, la nota es 0."
+  "POO_y_Encapsulamiento": "3 puntos. Se evaluará que existan clases bien definidas (ej. BankAccount), con atributos privados y métodos públicos para acceder o modificar la información (getters y métodos de lógica de negocio).",
+  "Manejo_de_Excepciones_y_Errores": "3 puntos. Es obligatorio el uso de bloques try-catch para evitar que el programa se cierre por inputs inválidos del usuario (ej. NumberFormatException) y la creación de al menos una excepción personalizada (ej. heredar de Exception para fondos insuficientes).",
+  "Uso_de_Colecciones": "2 puntos. El sistema debe ser capaz de gestionar múltiples cuentas utilizando colecciones de Java, concretamente un ArrayList, permitiendo iterar sobre ellas para buscar o listar.",
+  "Funcionalidad_del_Menu_Interactivo": "2 puntos. El programa debe contener un bucle (do-while) con una estructura condicional (switch) que permita al usuario: crear cuentas, depositar, retirar, listar y salir de forma fluida.",
+  "instrucciones_extra": "El código debe estar estrictamente en Java. No debe contener comentarios. Si el código compila, ejecuta el menú sin cuelgues y cumple los puntos anteriores, la calificación automática será de 10 sobre 10."
 }
